@@ -1,0 +1,11 @@
+{
+    "name": "Run All",
+    "type": "python",
+    "request": "launch",
+    "program": "main.py",
+    "console": "integratedTerminal",
+    "cwd": "${workspaceFolder}",
+    "configurations": [
+        {"name":"Python: Arquivo Atual","type":"python","request":"launch","program":"${file}","console":"integratedTerminal","justMyCode":true}
+    ]
+}
