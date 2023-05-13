@@ -1,5 +1,5 @@
 from requirements import *
-
+import requests
 
 # Criando um blockchain
 
@@ -80,14 +80,20 @@ class Blockchain:
     
     def add_node(self, address):
         parsed_url = urlparse(address)
-        self.nodes.add(parsed_url.netloc)
+        if parsed_url.netloc:
+            self.nodes.add(parsed_url.netloc)
+        elif parsed_url.path:
+        # Aceita URLs sem esquema como '192.168.0.5:5000'.
+            self.nodes.add(parsed_url.path)
+        else:
+            raise ValueError('URL inválida')
         
     def replace_chain(self):
         network = self.nodes
         longest_chain = None
         max_length = len(self.chain)
         for node in network:
-            response = request.get('http://{node}/get_chain')
+            response = requests.get(f'http://{node}/get_chain')
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
@@ -97,11 +103,8 @@ class Blockchain:
         if longest_chain:
             self.chain = longest_chain
             return True
-        return False
-        
-        
-    
-# Instanciando a aplicação Flask
+        return False 
+    # Instanciando a aplicação Flask
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
@@ -118,7 +121,7 @@ def mine_block():
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
     block = blockchain.create_block(proof, previous_hash)
-    blockchain.add_transaction(sender=node_address, receiver='Silva', amount='1')
+    blockchain.add_transaction(sender=node_address, receiver='Silva', amount='4')
     response = {
         'message': 'Parabéns, um bloco foi mineirado!',
         'index': block['index'],
@@ -161,6 +164,7 @@ def add_transaction():
         }
     return jsonify(response), 201
 
+
 @app.route('/connect_node', methods=['POST'])
 def connect_node():
     json = request.get_json()
@@ -171,7 +175,7 @@ def connect_node():
         blockchain.add_node(node)
     response = {
         'message': 'Todos nos conectados, blockchain contem os seguintes nos:',
-        'total_nodes': list(blockchain.node)
+        'total_nodes': list(blockchain.nodes)
         }
     return jsonify(response), 201
 
